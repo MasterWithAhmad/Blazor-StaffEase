@@ -1,0 +1,40 @@
+﻿@page "/leaverequests"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using StaffEase.Models
+@using StaffEase.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<StaffEase.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="leaverequests/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.LeaveRequests">
+    <PropertyColumn Property="leaverequest => leaverequest.EmployeeId" />
+    <PropertyColumn Property="leaverequest => leaverequest.StartDate" />
+    <PropertyColumn Property="leaverequest => leaverequest.EndDate" />
+    <PropertyColumn Property="leaverequest => leaverequest.Reason" />
+    <PropertyColumn Property="leaverequest => leaverequest.Status" />
+
+    <TemplateColumn Context="leaverequest">
+        <a href="@($"leaverequests/edit?id={leaverequest.Id}")">Edit</a> |
+        <a href="@($"leaverequests/details?id={leaverequest.Id}")">Details</a> |
+        <a href="@($"leaverequests/delete?id={leaverequest.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

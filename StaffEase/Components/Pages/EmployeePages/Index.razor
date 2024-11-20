@@ -1,0 +1,99 @@
+﻿@page "/employees"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using StaffEase.Interfaces
+@using StaffEase.Models
+@inject IEmployeeService EmployeeService
+
+<PageTitle>Employees</PageTitle>
+
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Employee Management</h1>
+
+    <div class="flex justify-between items-center mb-4">
+        <a href="/employees/create" class="btn btn-primary">Create New</a>
+
+        <div class="flex items-center">
+            <input type="text" placeholder="Search employees..."
+                   @bind="searchTerm"
+                   class="form-input w-full max-w-md px-4 py-2 border rounded-lg shadow-sm" />
+            <button @onclick="SearchEmployees"
+                    class="ml-2 btn btn-secondary">
+                Search
+            </button>
+        </div>
+    </div>
+
+    @if (employees == null)
+
+    {
+        <p>Loading employees...</p>
+    }
+
+    else if (!employees.Any())
+
+    {
+        <p>No employees found.</p>
+    }
+
+    else
+
+    {
+        <QuickGrid TGridItem="Employee" Class="table" Items="employees.AsQueryable()">
+            <PropertyColumn Title="Name" Property="employee => employee.Name" />
+            <PropertyColumn Title="Email" Property="employee => employee.Email" />
+            <PropertyColumn Title="Phone" Property="employee => employee.PhoneNumber" />
+            <PropertyColumn Title="Position" Property="employee => employee.Position" />
+            <PropertyColumn Title="Date of Hire" Property="employee => employee.DateOfHire" />
+            <PropertyColumn Title="Salary" Property="employee => employee.Salary" />
+            <PropertyColumn Title="Address" Property="employee => employee.Address" />
+            <TemplateColumn Title="Department" Context="employee">
+                @employee.Department?.Name
+            </TemplateColumn>
+            <TemplateColumn Title="Actions" Context="employee">
+                <a href="@($"employees/edit?id={employee.Id}")" class="text-blue-600 hover:underline">Edit</a> |
+                <a href="@($"employees/details?id={employee.Id}")" class="text-green-600 hover:underline">Details</a> |
+                <a href="@($"employees/delete?id={employee.Id}")" class="text-red-600 hover:underline">Delete</a>
+            </TemplateColumn>
+        </QuickGrid>
+    }
+</div>
+
+@code {
+    private IEnumerable<Employee> employees = Array.Empty<Employee>();
+
+    private string searchTerm = string.Empty;
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        await LoadEmployeesAsync();
+
+    }
+
+
+
+    private async Task LoadEmployeesAsync()
+
+    {
+
+        employees = await EmployeeService.GetAllEmployeesAsync();
+
+    }
+
+
+
+    private async Task SearchEmployees()
+
+    {
+
+        employees = string.IsNullOrWhiteSpace(searchTerm)
+
+            ? await EmployeeService.GetAllEmployeesAsync()
+
+            : await EmployeeService.SearchEmployeesAsync(searchTerm);
+
+    }
+}

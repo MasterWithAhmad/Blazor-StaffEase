@@ -1,0 +1,115 @@
+﻿@page "/employees/create"
+@using Microsoft.EntityFrameworkCore
+@using StaffEase.Models
+@inject IDbContextFactory<StaffEase.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Employee</PageTitle>
+
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Create Employee</h1>
+    <div class="card shadow-lg p-4">
+        <EditForm method="post" Model="Employee" OnValidSubmit="AddEmployee" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Name -->
+                <div class="flex items-center">
+                    <label for="name" class="w-1/3 font-medium">Name:</label>
+                    <InputText id="name" @bind-Value="Employee.Name" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.Name" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Email -->
+                <div class="flex items-center">
+                    <label for="email" class="w-1/3 font-medium">Email:</label>
+                    <InputText id="email" @bind-Value="Employee.Email" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.Email" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Phone Number -->
+                <div class="flex items-center">
+                    <label for="phonenumber" class="w-1/3 font-medium">Phone Number:</label>
+                    <InputText id="phonenumber" @bind-Value="Employee.PhoneNumber" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.PhoneNumber" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Position -->
+                <div class="flex items-center">
+                    <label for="position" class="w-1/3 font-medium">Position:</label>
+                    <InputText id="position" @bind-Value="Employee.Position" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.Position" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Date of Hire -->
+                <div class="flex items-center">
+                    <label for="dateofhire" class="w-1/3 font-medium">Date of Hire:</label>
+                    <InputDate id="dateofhire" @bind-Value="Employee.DateOfHire" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.DateOfHire" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Salary -->
+                <div class="flex items-center">
+                    <label for="salary" class="w-1/3 font-medium">Salary:</label>
+                    <InputNumber id="salary" @bind-Value="Employee.Salary" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.Salary" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Address -->
+                <div class="flex items-center">
+                    <label for="address" class="w-1/3 font-medium">Address:</label>
+                    <InputText id="address" @bind-Value="Employee.Address" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm" />
+                </div>
+                <ValidationMessage For="() => Employee.Address" class="col-span-2 text-red-500 text-sm" />
+
+                <!-- Department -->
+                <div class="flex items-center">
+                    <label for="department" class="w-1/3 font-medium">Department:</label>
+                    <InputSelect id="department" @bind-Value="Employee.DepartmentId" class="form-input w-full px-4 py-2 border rounded-lg shadow-sm">
+                        <option value="" disabled>Select a Department</option>
+                        @foreach (var department in Departments)
+                        {
+                            <option value="@department.Id">@department.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <ValidationMessage For="() => Employee.DepartmentId" class="col-span-2 text-red-500 text-sm" />
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="btn btn-primary">Create</button>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="mt-4">
+        <a href="/employees" class="text-blue-600 hover:underline">Back to List</a>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Employee Employee { get; set; } = new();
+
+    private List<Department> Departments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartmentsAsync();
+    }
+
+    private async Task LoadDepartmentsAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Departments = await context.Departments.ToListAsync();
+    }
+
+    private async Task AddEmployee()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Employees.Add(Employee);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/employees");
+    }
+}

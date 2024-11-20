@@ -1,0 +1,113 @@
+﻿@page "/leaverequests/edit"
+@using Microsoft.EntityFrameworkCore
+@using StaffEase.Models
+@using static StaffEase.Models.LeaveRequest
+@inject IDbContextFactory<StaffEase.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>LeaveRequest</h2>
+<hr />
+@if (LeaveRequest is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="LeaveRequest" OnValidSubmit="UpdateLeaveRequest" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="LeaveRequest.Id" value="@LeaveRequest.Id" />
+                <div class="mb-3">
+                    <label for="employeeid" class="form-label">EmployeeId:</label>
+                    <InputNumber id="employeeid" @bind-Value="LeaveRequest.EmployeeId" class="form-control" aria-required="true" />
+                    <ValidationMessage For="@(() => LeaveRequest.EmployeeId)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="startdate" class="form-label">StartDate:</label>
+                    <InputDate id="startdate" @bind-Value="LeaveRequest.StartDate" class="form-control" aria-required="true" />
+                    <ValidationMessage For="@(() => LeaveRequest.StartDate)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="enddate" class="form-label">EndDate:</label>
+                    <InputDate id="enddate" @bind-Value="LeaveRequest.EndDate" class="form-control" aria-required="true" />
+                    <ValidationMessage For="@(() => LeaveRequest.EndDate)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason:</label>
+                    <InputText id="reason" @bind-Value="LeaveRequest.Reason" class="form-control" aria-required="true" />
+                    <ValidationMessage For="@(() => LeaveRequest.Reason)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status:</label>
+                    <InputSelect id="status" @bind-Value="LeaveRequest.Status" class="form-control" aria-required="true">
+                        @foreach (var status in Enum.GetValues<LeaveStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => LeaveRequest.Status)" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/leaverequests">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private LeaveRequest? LeaveRequest { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        LeaveRequest ??= await context.LeaveRequests.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (LeaveRequest is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateLeaveRequest()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(LeaveRequest!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!LeaveRequestExists(LeaveRequest!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/leaverequests");
+    }
+
+    private bool LeaveRequestExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.LeaveRequests.Any(e => e.Id == id);
+    }
+}
